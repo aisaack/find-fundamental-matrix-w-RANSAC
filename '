@@ -1,0 +1,64 @@
+import math
+import cv2
+import numpy as np
+
+
+def find_fundamental(point1, point2, F):
+    '''
+    point1 (np.ndarray): 9 x 3
+    point2 (np.ndarray): 9 x 3
+    '''
+    if F.dim == 2:
+        F = F.reshape(1, -1)
+    point2 = point2.transpose()
+    P = point1.matmul(point2).reshape(-1, 1)
+    return P.matmul(F)
+
+def compute_iter_number(num_samples, p=0.99, e=0.5):
+    num = math.log(1 - p) 
+    den = math.log(1 - (1 - e) ** num_samples)
+    return math.ceil(num / den)
+
+
+class Ransec:
+    '''RANSEC for optimal fundamental matrix between 2 images'''
+    def __init__(
+            self,
+            model=find_fundamental,
+            in_ratio=0.8,   
+            num_iter=1000,
+            num_points=8):
+        self.model = model
+        self.num_iter = num_iter
+        self.num_points = num_points
+
+    def fit(self, point1, point2):
+        F = np.random.randn(9, 1)
+        min_val = 0
+        inlier = []
+        pts_len = point1.shape[0]
+        idx = np.arange(pts_len)
+        F = np.random.randn((9, 1))
+        for iter_i in range(self.num_iter):
+            pick = np.random.choose(idx, size=self.num_points, replace=False)
+            p1 = point1[pick]
+            p2 = point2[pick]
+            score = self.model(p1, p2, F)
+            if len(inlier) / pts_lne >= self.in_ratio:
+                break
+
+        return
+
+    def eval(self, F):
+        U, D, V = np.linalg.svd(F)
+        return np.min(D)
+
+
+
+
+if __name__ == '__main__':
+    F = np.random.randn(1, 9)
+    p1 = np.random.randn(3, 9)
+    p2 = np.random.randn(9, 3)
+    print(np.matmul(p2, p1).shape)
+    print(F.shape)
